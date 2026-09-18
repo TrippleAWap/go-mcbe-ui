@@ -1,0 +1,8 @@
+{
+  "id": "sample_screen",
+  "type": "screen",
+  "anchor_from": "center",
+  "anchor_to": "center",
+  "size": [1920, 1080],
+  "controls": ["title_label", "start_button", "settings_button"]
+}
