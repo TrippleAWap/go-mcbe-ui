@@ -14,8 +14,8 @@ go get github.com/trippleawap/go-mcbe-ui
 schema/        Core types: Relative, Anchor, Control, Bind, Anim, Screen, layout helpers
 controls/      Type-gated builders: Panel, Label, Image, Button, etc.
   components/  Reusable screens: ConfirmDialog, ShopScreen, ServerForm, HUDBar, Inventory, Crafting, Minimap
-registry/      Screen registry: manages screens, validates navigation, injects transition animations
-pack/          Pack generator: _ui_defs.json, screen files, pack.mcmeta, textures, animations
+registry/      Screen registry: manages screens, validates control references, loads existing packs
+pack/          Pack generator: _ui_defs.json, screen files, manifest.json
 validate/      Schema-aware validation
 ```
 
@@ -96,7 +96,6 @@ import (
     "github.com/trippleawap/go-mcbe-ui/mcbeui/controls"
     "github.com/trippleawap/go-mcbe-ui/mcbeui/pack"
     "github.com/trippleawap/go-mcbe-ui/mcbeui/registry"
-    "github.com/trippleawap/go-mcbe-ui/mcbeui/transitions"
 )
 
 // Build screens
@@ -108,16 +107,25 @@ playBtn := controls.NewButton().ID("play_btn").Control()
 rgstry := registry.New()
 rgstry.AddScreen("menu", menu.Control()).
        AddScreen("game", game.Control()).
-       AddScreen("play_btn", playBtn).
-       AddAnimationDef(string(transitions.Fade))
+       AddScreen("play_btn", playBtn)
 
-// Add navigation links using typed transition constants
-rgstry.AddLink("play_btn", "game", string(transitions.Fade), 0.5)
-
-// ToPack validates screens, controls, links, AND transitions against anim defs
+// ToPack validates the registry (screens and control references)
 out, err := rgstry.ToPack("my_addon")
 if err != nil {
     log.Fatalf("validation failed: %v", err)
+}
+
+// Generate the resource pack to disk
+p := pack.New("my_addon", "My Resource Pack")
+for _, def := range out.Screens {
+    p.AddScreenDef(&pack.ScreenDef{
+        ID:        def.ID,
+        Namespace: def.Namespace,
+        Control:   def.Control,
+    })
+}
+if err := p.Build("./my_pack_output"); err != nil {
+    log.Fatal(err)
 }
 ```
 
@@ -224,12 +232,8 @@ The `registry` package provides:
 - **Screen management**: `AddScreen()` is fluent — errors are collected and checkable via `Errors()`
 - **Nested controls**: `RegisterNested()` adds controls not registered as top-level screens
 - **Loading**: `LoadScreen()` and `LoadFromDir()` read existing JSON UI files into the registry
-- **Navigation links**: `AddLink(fromID, toScreen, animID, duration)` for chaining
-- **Animation defs**: `AddAnimationDef(filename)` registers transition animation definitions
-- **Validation**: `Validate()` checks target screens exist, source controls exist, AND unresolved Controls[] references
-- **Transition validation**: `ToPack()` also validates that every transition's AnimationID matches a registered animation def
-- **Animation injection**: `InjectAnimations()` attaches transition animations to triggering controls
-- **Pack output**: `ToPack(namespace)` validates everything and returns `*PackOutput` with screens + transitions
+- **Validation**: `Validate()` checks that all `Controls[]` references resolve to a registered screen or nested control
+- **Pack output**: `ToPack(namespace)` validates everything and returns `*PackOutput` with screens
 - **Flat control index**: `CollectAllControls()` resolves all control IDs across screens via iterative fixpoint
 - **Unresolved ID detection**: `ResolveIDs()` reports Controls[] references that have no matching screen/nested control
 
@@ -240,54 +244,14 @@ mcbeui/
   schema/        Anchor, Relative, Control, Bind, Anim, Screen, layout helpers
   controls/      Type-gated builders (Panel, Label, Image, Button, ...)
     components/  Reusable screens (ConfirmDialog, ShopScreen, ServerForm, HUDBar, Inventory, Crafting, Minimap)
-  registry/      Screen registry with validation, animation injection, and pack loading
-  pack/          Pack generator (_ui_defs.json, pack.mcmeta, textures, animations)
-  transitions/   Pre-built transition animations (fade, slide, scale)
+  registry/      Screen registry with validation and pack loading
+  pack/          Pack generator (_ui_defs.json, screen files, manifest.json)
   validate/      Schema-aware validation
 examples/        pack_example — full workflow demo
 ```
-
-## Screen Navigation (Lua Script)
-
-The library generates valid `_ui_defs.json` with transitions, but MCBE requires Lua
-script bindings to wire button presses to screen navigation. Add a script file like
-`scripts/ui/main.lua`:
-
-```lua
-local function onButtonPressed(buttonId)
-    if buttonId == "play_btn" then
-        ModalSheet.open("game_screen")
-    elseif buttonId == "settings_btn" then
-        ModalSheet.open("settings_screen")
-    elseif buttonId == "back_btn" then
-        ModalSheet.close()
-    end
-end
-
-button_pressed = function(self, id)
-    onButtonPressed(id)
-end
-```
-
-Then reference it in `pack.mcmeta`:
-
-```json
-{
-  "format_version": [1, 0],
-  "header": { ... },
-  "scripts": {
-    "start": ["scripts/ui/main.lua"]
-  }
-}
-```
-
-See the [MCBE UI Scripting Docs](https://learn.microsoft.com/en-us/windows/gaming/gdk/content/packs/ui) for details.
 
 ## Limitations
 
 - **`Controls []string`**: Child references are string IDs, not pointers. Nested controls
   can only be resolved if they are registered as screens or added via `RegisterNested()`.
   Use `ResolveIDs()` to discover unresolved references before calling `Validate()`.
-- **No script generation**: The library generates valid `_ui_defs.json` but does not produce
-  the Lua/JavaScript event bindings that MCBE requires for actual button-click navigation.
-  Script code must be written separately (see Screen Navigation section above).

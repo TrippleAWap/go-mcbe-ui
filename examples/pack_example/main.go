@@ -13,7 +13,6 @@ import (
 	"github.com/trippleawap/go-mcbe-ui/mcbeui/pack"
 	"github.com/trippleawap/go-mcbe-ui/mcbeui/registry"
 	"github.com/trippleawap/go-mcbe-ui/mcbeui/schema"
-	"github.com/trippleawap/go-mcbe-ui/mcbeui/transitions"
 	"github.com/trippleawap/go-mcbe-ui/mcbeui/validate"
 )
 
@@ -59,18 +58,8 @@ func main() {
 		DefaultControl("btn_back")
 
 	// =====================================================
-	// 2. Reusable components (added directly to pack — not in registry)
-	//    Components have nested Controls[] that cannot be resolved
-	//    without RegisterNested, so they bypass the registry.
-	// =====================================================
-	_ = components.ConfirmDialog("Exit?", "Really quit?") // used below
-	_ = components.InventoryScreenWithData([]components.InventorySlot{
-		{ItemID: "minecraft:diamond", Count: 64, SlotID: "diamond_slot"},
-	})
-
-	// =====================================================
-	// 3. Screen navigation with registry
-	//    Only screens with fully-resolvable Controls[] should go here.
+	// 2. Register screens in the registry (fluent — errors
+	//    are collected and checked via Errors())
 	// =====================================================
 	rgstry := registry.New()
 
@@ -78,22 +67,13 @@ func main() {
 		AddScreen("settings_screen", settingsScreen.Control()).
 		AddScreen("play_btn", playBtn.Control()).
 		AddScreen("settings_btn", settingsBtn.Control()).
-		AddScreen("back_btn", backBtn.Control()).
-		AddAnimationDef(string(transitions.Fade)).
-		AddAnimationDef(string(transitions.SlideLeft))
+		AddScreen("back_btn", backBtn.Control())
 
-	// Add navigation links using typed transition constants
-	rgstry.AddLink("play_btn", "settings_screen", string(transitions.Fade), 0.5).
-		AddLink("settings_btn", "settings_screen", string(transitions.Fade), 0.3).
-		AddLink("back_btn", "main_menu", string(transitions.SlideLeft), 0.3)
-
-	// Validate navigation links (also validates transitions against anim defs)
 	if errs := rgstry.Validate(); len(errs) > 0 {
 		log.Fatalf("Registry validation failed: %v", errs)
 	}
-	rgstry.InjectAnimations()
 
-	// Register screens from registry output
+	// Add all registered screens to the pack.
 	for id, ctrl := range rgstry.Screens() {
 		p.AddScreenDef(&pack.ScreenDef{
 			ID:        id,
@@ -102,18 +82,8 @@ func main() {
 		})
 	}
 
-	// Register transitions
-	for _, tr := range rgstry.Links() {
-		p.AddTransition(pack.ScreenTransition{
-			From:        tr.FromID,
-			To:          tr.ToScreen,
-			AnimationID: tr.AnimID,
-			Duration:    tr.Duration,
-		})
-	}
-
 	// =====================================================
-	// 4. Additional component screens (added directly to pack)
+	// 3. Component screens (added directly to the pack)
 	// =====================================================
 	shop := components.ShopScreen()
 	p.AddScreenDef(&pack.ScreenDef{
@@ -151,14 +121,7 @@ func main() {
 	})
 
 	// =====================================================
-	// 5. Pack metadata
-	// =====================================================
-	p.AddTexture("textures/ui/inventory/slot")
-	p.AddTexture("textures/ui/hud/health_bar")
-	p.AddTexture("textures/ui/minimap/circle_bg")
-
-	// =====================================================
-	// 6. Validate all screens
+	// 4. Validate all screens
 	// =====================================================
 	for _, def := range p.Screens {
 		screen := &schema.Screen{Namespace: def.Namespace, RootPanel: def.ID, Root: *def.Control}
@@ -168,7 +131,7 @@ func main() {
 	}
 
 	// =====================================================
-	// 7. Generate
+	// 5. Generate the resource pack
 	// =====================================================
 	outDir := "./my_pack_output"
 	os.RemoveAll(outDir)
@@ -182,9 +145,5 @@ func main() {
 		fmt.Printf("  ui/%s.json\n", def.ID)
 	}
 	fmt.Println("  ui/_ui_defs.json")
-	fmt.Println("  pack.mcmeta")
-	fmt.Printf("\nNavigation links: %d\n", len(rgstry.Links()))
-	fmt.Printf("Registered textures: %d\n", len(p.Textures))
-	fmt.Printf("Animation defs: %d\n", len(p.AnimationDefs))
-	fmt.Printf("Transitions: %d\n", len(p.Transitions))
+	fmt.Println("  manifest.json")
 }

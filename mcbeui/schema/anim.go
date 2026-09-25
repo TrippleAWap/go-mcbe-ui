@@ -99,24 +99,24 @@ func mustMarshal(v interface{}) json.RawMessage {
 
 // Anim represents a single animation entry.
 type Anim struct {
-	AnimType                 AnimType        `json:"anim_type"`
-	Duration                 float64         `json:"duration,omitempty"`
-	Next                     string          `json:"next,omitempty"`
-	DestroyAtEnd             bool            `json:"destroy_at_end,omitempty"`
-	PlayEvent                string          `json:"play_event,omitempty"`
-	EndEvent                 string          `json:"end_event,omitempty"`
-	StartEvent               string          `json:"start_event,omitempty"`
-	ResetEvent               string          `json:"reset_event,omitempty"`
-	Easing                   Easing          `json:"easing,omitempty"`
-	From                     json.RawMessage `json:"from,omitempty"`
-	To                       json.RawMessage `json:"to,omitempty"`
-	InitialUV                json.RawMessage `json:"initial_uv,omitempty"`
-	FPS                      float64         `json:"fps,omitempty"`
-	FrameCount               int             `json:"frame_count,omitempty"`
-	FrameStep                float64         `json:"frame_step,omitempty"`
-	Reversible               bool            `json:"reversible,omitempty"`
-	Resettable               bool            `json:"resettable,omitempty"`
-	ScaleFromStartingAlpha   bool            `json:"scale_from_starting_alpha,omitempty"`
-	Activated                bool            `json:"activated,omitempty"`
-	Looping                  bool            `json:"looping,omitempty"`
+	AnimType               AnimType        `json:"anim_type"`
+	Duration               float64         `json:"duration,omitempty"`
+	Next                   string          `json:"next,omitempty"`
+	DestroyAtEnd           bool            `json:"destroy_at_end,omitempty"`
+	PlayEvent              string          `json:"play_event,omitempty"`
+	EndEvent               string          `json:"end_event,omitempty"`
+	StartEvent             string          `json:"start_event,omitempty"`
+	ResetEvent             string          `json:"reset_event,omitempty"`
+	Easing                 Easing          `json:"easing,omitempty"`
+	From                   json.RawMessage `json:"from,omitempty"`
+	To                     json.RawMessage `json:"to,omitempty"`
+	InitialUV              json.RawMessage `json:"initial_uv,omitempty"`
+	FPS                    float64         `json:"fps,omitempty"`
+	FrameCount             int             `json:"frame_count,omitempty"`
+	FrameStep              float64         `json:"frame_step,omitempty"`
+	Reversible             bool            `json:"reversible,omitempty"`
+	Resettable             bool            `json:"resettable,omitempty"`
+	ScaleFromStartingAlpha bool            `json:"scale_from_starting_alpha,omitempty"`
+	Activated              bool            `json:"activated,omitempty"`
+	Looping                bool            `json:"looping,omitempty"`
 }

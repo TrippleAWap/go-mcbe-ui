@@ -1,3 +1,3 @@
 // Package registry provides a screen registry that manages screens, validates
-// navigation links, and wires transition animations into controls.
+// control references, and loads existing JSON UI files.
 package registry

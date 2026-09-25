@@ -48,15 +48,15 @@ func {{.Name}}Screen() *schema.Screen {
 `
 
 type genData struct {
-	Input    string
-	Package  string
-	Name     string
-	Namespace string
-	ID       string
+	Input      string
+	Package    string
+	Name       string
+	Namespace  string
+	ID         string
 	AnchorFrom string
-	SizeX    int
-	SizeY    int
-	Controls []string
+	SizeX      int
+	SizeY      int
+	Controls   []string
 }
 
 func main() {
@@ -78,10 +78,10 @@ func main() {
 	}
 
 	var ctrl struct {
-		ID         string      `json:"id"`
-		AnchorFrom string      `json:"anchor_from"`
+		ID         string        `json:"id"`
+		AnchorFrom string        `json:"anchor_from"`
 		Size       []interface{} `json:"size"`
-		Controls   []string    `json:"controls,omitempty"`
+		Controls   []string      `json:"controls,omitempty"`
 	}
 	if err := json.Unmarshal(data, &ctrl); err != nil {
 		fmt.Fprintf(os.Stderr, "parse JSON: %v\n", err)

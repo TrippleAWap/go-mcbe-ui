@@ -143,8 +143,8 @@ func TestInventoryScreenWithDataEmpty(t *testing.T) {
 
 func TestMinimapScreen(t *testing.T) {
 	tests := []struct {
-		name    string
-		radius  int
+		name   string
+		radius int
 	}{
 		{"radius_32", 32},
 		{"radius_64", 64},

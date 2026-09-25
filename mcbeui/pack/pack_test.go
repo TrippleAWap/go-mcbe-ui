@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 
 	"github.com/trippleawap/go-mcbe-ui/mcbeui/schema"
@@ -37,7 +36,7 @@ func TestBasicPack(t *testing.T) {
 	if err := json.Unmarshal(defsData, &defs); err != nil {
 		t.Fatalf("parse _ui_defs.json: %v", err)
 	}
-	uiList, ok := defs["ui"].([]interface{})
+	uiList, ok := defs["ui_defs"].([]interface{})
 	if !ok || len(uiList) != 1 {
 		t.Fatalf("expected 1 UI entry, got %v", uiList)
 	}
@@ -58,24 +57,66 @@ func TestBasicPack(t *testing.T) {
 		t.Errorf("expected type screen, got %v", rootObj["type"])
 	}
 
-	metaPath := filepath.Join(dir, "pack.mcmeta")
+	metaPath := filepath.Join(dir, "manifest.json")
 	metaData, err := os.ReadFile(metaPath)
 	if err != nil {
-		t.Fatalf("read pack.mcmeta: %v", err)
+		t.Fatalf("read manifest.json: %v", err)
 	}
 	var meta map[string]interface{}
 	if err := json.Unmarshal(metaData, &meta); err != nil {
-		t.Fatalf("parse pack.mcmeta: %v", err)
+		t.Fatalf("parse manifest.json: %v", err)
 	}
-	if fv, ok := meta["format_version"].([]interface{}); !ok || len(fv) < 1 || int(fv[0].(float64)) != 1 {
-		t.Errorf("expected format_version[0]=1, got %v", meta["format_version"])
+	if fv, ok := meta["format_version"].(float64); !ok || int(fv) != 2 {
+		t.Errorf("expected format_version=2, got %v", meta["format_version"])
 	}
 	header, ok := meta["header"].(map[string]interface{})
 	if !ok {
-		t.Fatal("expected header in pack.mcmeta")
+		t.Fatal("expected header in manifest.json")
 	}
 	if header["name"] != "My Test Pack" {
 		t.Errorf("expected pack name 'My Test Pack', got %v", header["name"])
+	}
+	if _, ok := header["min_engine_version"]; !ok {
+		t.Error("expected min_engine_version in header")
+	}
+}
+
+func TestUIDefsHasOnlyStandardKeys(t *testing.T) {
+	p := New("std_test", "Standard Pack")
+	p.AddScreenDef(&ScreenDef{
+		ID:        "screen1",
+		Namespace: "std_test",
+		Control:   &schema.Control{ID: "screen1", Type: "screen"},
+	})
+
+	dir := t.TempDir()
+	if err := p.Build(dir); err != nil {
+		t.Fatalf("Build: %v", err)
+	}
+
+	defsData, err := os.ReadFile(filepath.Join(dir, "ui", "_ui_defs.json"))
+	if err != nil {
+		t.Fatalf("read _ui_defs.json: %v", err)
+	}
+	var defs map[string]interface{}
+	if err := json.Unmarshal(defsData, &defs); err != nil {
+		t.Fatalf("parse _ui_defs.json: %v", err)
+	}
+
+	for key := range defs {
+		switch key {
+		case "format_version", "ui_defs":
+		default:
+			t.Errorf("unexpected key %q in _ui_defs.json", key)
+		}
+	}
+	if _, ok := defs["ui_defs"]; !ok {
+		t.Error("expected ui_defs key in _ui_defs.json")
+	}
+	for _, extra := range []string{"animations", "transitions", "script_api_version"} {
+		if _, ok := defs[extra]; ok {
+			t.Errorf("expected no non-standard %q key in _ui_defs.json", extra)
+		}
 	}
 }
 
@@ -104,7 +145,7 @@ func TestMultipleScreens(t *testing.T) {
 	if err := json.Unmarshal(defsData, &defs); err != nil {
 		t.Fatalf("parse _ui_defs.json: %v", err)
 	}
-	uiList, _ := defs["ui"].([]interface{})
+	uiList, _ := defs["ui_defs"].([]interface{})
 	if len(uiList) != 3 {
 		t.Fatalf("expected 3 UI entries, got %d", len(uiList))
 	}
@@ -135,16 +176,19 @@ func TestDeterministicOutput(t *testing.T) {
 	if string(data1) != string(data2) {
 		t.Error("same screens should produce identical _ui_defs.json regardless of registration order")
 	}
+
+	m1, _ := os.ReadFile(filepath.Join(d1, "manifest.json"))
+	m2, _ := os.ReadFile(filepath.Join(d2, "manifest.json"))
+	if string(m1) != string(m2) {
+		t.Error("same pack should produce identical manifest.json regardless of registration order")
+	}
 }
 
-func TestAddTexture(t *testing.T) {
-	p := New("texture_test", "Texture Pack")
-	p.AddTexture("textures/items/test_item")
-	p.AddTexture("textures/blocks/test_block")
-
+func TestManifestDistinctUUIDs(t *testing.T) {
+	p := New("uuid_test", "UUID Pack")
 	p.AddScreenDef(&ScreenDef{
 		ID:        "screen1",
-		Namespace: "texture_test",
+		Namespace: "uuid_test",
 		Control:   &schema.Control{ID: "screen1", Type: "screen"},
 	})
 
@@ -153,253 +197,31 @@ func TestAddTexture(t *testing.T) {
 		t.Fatalf("Build: %v", err)
 	}
 
-	defsPath := filepath.Join(dir, "ui", "_ui_defs.json")
-	defsData, err := os.ReadFile(defsPath)
+	metaData, err := os.ReadFile(filepath.Join(dir, "manifest.json"))
 	if err != nil {
-		t.Fatalf("read _ui_defs.json: %v", err)
-	}
-	var defs map[string]interface{}
-	if err := json.Unmarshal(defsData, &defs); err != nil {
-		t.Fatalf("parse _ui_defs.json: %v", err)
-	}
-	if _, ok := defs["animations"]; ok {
-		t.Error("expected no animations key in _ui_defs.json")
-	}
-	if _, ok := defs["transitions"]; ok {
-		t.Error("expected no transitions key in _ui_defs.json")
-	}
-
-	metaPath := filepath.Join(dir, "pack.mcmeta")
-	metaData, err := os.ReadFile(metaPath)
-	if err != nil {
-		t.Fatalf("read pack.mcmeta: %v", err)
+		t.Fatalf("read manifest.json: %v", err)
 	}
 	var meta map[string]interface{}
 	if err := json.Unmarshal(metaData, &meta); err != nil {
-		t.Fatalf("parse pack.mcmeta: %v", err)
-	}
-	imports, ok := meta["imports"].([]interface{})
-	if !ok {
-		t.Fatal("expected imports array in pack.mcmeta")
-	}
-	if len(imports) != 2 {
-		t.Fatalf("expected 2 imports, got %d", len(imports))
-	}
-	expectedImports := []string{"textures/items/test_item", "textures/blocks/test_block"}
-	for i, exp := range expectedImports {
-		if imports[i] != exp {
-			t.Errorf("expected import[%d]=%q, got %v", i, exp, imports[i])
-		}
-	}
-}
-
-func TestAddAnimationDef(t *testing.T) {
-	p := New("anim_test", "Animation Pack")
-	p.AddAnimationDef("animations/test.anim.json")
-	p.AddAnimationDef("animations/menu_open.anim.json")
-
-	p.AddScreenDef(&ScreenDef{
-		ID:        "screen1",
-		Namespace: "anim_test",
-		Control:   &schema.Control{ID: "screen1", Type: "screen"},
-	})
-
-	dir := t.TempDir()
-	if err := p.Build(dir); err != nil {
-		t.Fatalf("Build: %v", err)
+		t.Fatalf("parse manifest.json: %v", err)
 	}
 
-	defsPath := filepath.Join(dir, "ui", "_ui_defs.json")
-	defsData, err := os.ReadFile(defsPath)
-	if err != nil {
-		t.Fatalf("read _ui_defs.json: %v", err)
+	header := meta["header"].(map[string]interface{})
+	modules := meta["modules"].([]interface{})
+	if len(modules) != 1 {
+		t.Fatalf("expected 1 module, got %d", len(modules))
 	}
-	var defs map[string]interface{}
-	if err := json.Unmarshal(defsData, &defs); err != nil {
-		t.Fatalf("parse _ui_defs.json: %v", err)
-	}
-	animList, ok := defs["animations"].([]interface{})
-	if !ok {
-		t.Fatal("expected animations array in _ui_defs.json")
-	}
-	if len(animList) != 2 {
-		t.Fatalf("expected 2 animations, got %d", len(animList))
-	}
-	expectedAnims := []string{"animations/menu_open.anim.json", "animations/test.anim.json"}
-	for i, exp := range expectedAnims {
-		if animList[i] != exp {
-			t.Errorf("expected animations[%d]=%q, got %v", i, exp, animList[i])
-		}
-	}
-	if _, ok := defs["transitions"]; ok {
-		t.Error("expected no transitions key in _ui_defs.json")
-	}
-}
+	mod := modules[0].(map[string]interface{})
 
-func TestAddTransition(t *testing.T) {
-	p := New("trans_test", "Transition Pack")
-	p.AddTransition(ScreenTransition{From: "menu", To: "game", AnimationID: "transition_slide"})
-	p.AddTransition(ScreenTransition{From: "game", To: "menu", AnimationID: "transition_slide_back"})
-
-	p.AddScreenDef(&ScreenDef{
-		ID:        "menu",
-		Namespace: "trans_test",
-		Control:   &schema.Control{ID: "menu", Type: "screen"},
-	})
-	p.AddScreenDef(&ScreenDef{
-		ID:        "game",
-		Namespace: "trans_test",
-		Control:   &schema.Control{ID: "game", Type: "screen"},
-	})
-
-	dir := t.TempDir()
-	if err := p.Build(dir); err != nil {
-		t.Fatalf("Build: %v", err)
+	if mod["type"] != "resources" {
+		t.Errorf("expected module type resources, got %v", mod["type"])
 	}
-
-	defsPath := filepath.Join(dir, "ui", "_ui_defs.json")
-	defsData, err := os.ReadFile(defsPath)
-	if err != nil {
-		t.Fatalf("read _ui_defs.json: %v", err)
+	headerUUID, _ := header["uuid"].(string)
+	moduleUUID, _ := mod["uuid"].(string)
+	if headerUUID == "" || moduleUUID == "" {
+		t.Fatal("expected UUIDs in header and module")
 	}
-	var defs map[string]interface{}
-	if err := json.Unmarshal(defsData, &defs); err != nil {
-		t.Fatalf("parse _ui_defs.json: %v", err)
-	}
-	transList, ok := defs["transitions"].([]interface{})
-	if !ok {
-		t.Fatal("expected transitions array in _ui_defs.json")
-	}
-	if len(transList) != 2 {
-		t.Fatalf("expected 2 transitions, got %d", len(transList))
-	}
-	m0 := transList[0].(map[string]interface{})
-	m1 := transList[1].(map[string]interface{})
-	// Transitions are in registration order
-	var first, second map[string]interface{}
-	if m0["from"] == "menu" {
-		first, second = m0, m1
-	} else {
-		first, second = m1, m0
-	}
-	if first["from"] != "menu" || first["to"] != "game" || first["animation_id"] != "transition_slide" {
-		t.Errorf("first transition mismatch: %v", first)
-	}
-	if second["from"] != "game" || second["to"] != "menu" || second["animation_id"] != "transition_slide_back" {
-		t.Errorf("second transition mismatch: %v", second)
-	}
-}
-
-func TestCombinedFeatures(t *testing.T) {
-	p := New("combo_test", "Combined Pack")
-	p.AddTexture("textures/ui/bg_texture")
-	p.AddTexture("textures/ui/button_texture")
-	p.AddAnimationDef("animations/button_press.anim.json")
-	p.AddAnimationDef("animations/screen_fade.anim.json")
-	p.AddTransition(ScreenTransition{From: "main_menu", To: "game", AnimationID: "animations/screen_fade.anim.json"})
-	p.AddTransition(ScreenTransition{From: "game", To: "main_menu", AnimationID: "animations/screen_fade.anim.json"})
-
-	p.AddScreenDef(&ScreenDef{
-		ID:        "main_menu",
-		Namespace: "combo_test",
-		Control:   &schema.Control{ID: "main_menu", Type: "screen"},
-	})
-	p.AddScreenDef(&ScreenDef{
-		ID:        "game",
-		Namespace: "combo_test",
-		Control:   &schema.Control{ID: "game", Type: "screen"},
-	})
-
-	dir := t.TempDir()
-	if err := p.Build(dir); err != nil {
-		t.Fatalf("Build: %v", err)
-	}
-
-	// Check _ui_defs.json
-	defsData, err := os.ReadFile(filepath.Join(dir, "ui", "_ui_defs.json"))
-	if err != nil {
-		t.Fatalf("read _ui_defs.json: %v", err)
-	}
-	var defs map[string]interface{}
-	if err := json.Unmarshal(defsData, &defs); err != nil {
-		t.Fatalf("parse _ui_defs.json: %v", err)
-	}
-
-	// Should have ui, animations, transitions
-	if ui, ok := defs["ui"].([]interface{}); !ok || len(ui) != 2 {
-		t.Errorf("expected 2 UI entries, got %v", defs["ui"])
-	}
-	if anims, ok := defs["animations"].([]interface{}); !ok || len(anims) != 2 {
-		t.Errorf("expected 2 animations, got %v", defs["animations"])
-	}
-	if trans, ok := defs["transitions"].([]interface{}); !ok || len(trans) != 2 {
-		t.Errorf("expected 2 transitions, got %v", defs["transitions"])
-	}
-
-	// Check pack.mcmeta
-	metaData, err := os.ReadFile(filepath.Join(dir, "pack.mcmeta"))
-	if err != nil {
-		t.Fatalf("read pack.mcmeta: %v", err)
-	}
-	var meta map[string]interface{}
-	if err := json.Unmarshal(metaData, &meta); err != nil {
-		t.Fatalf("parse pack.mcmeta: %v", err)
-	}
-	if imports, ok := meta["imports"].([]interface{}); !ok || len(imports) != 2 {
-		t.Errorf("expected 2 imports in pack.mcmeta, got %v", meta["imports"])
-	}
-	if _, ok := meta["modules"]; !ok {
-		t.Error("expected modules in pack.mcmeta")
-	}
-}
-
-func TestValidateMissingTargetScreen(t *testing.T) {
-	p := New("val_test", "Validation Pack")
-	p.AddTransition(ScreenTransition{From: "menu", To: "missing_screen", AnimationID: "fade"})
-
-	_ = p.AddScreenDef(&ScreenDef{
-		ID:        "menu",
-		Namespace: "val_test",
-		Control:   &schema.Control{ID: "menu", Type: "screen"},
-	})
-
-	errs := p.Validate()
-	if len(errs) != 2 {
-		t.Fatalf("expected 2 errors, got %d: %v", len(errs), errs)
-	}
-	if !strings.Contains(errs[0], "missing_screen") {
-		t.Errorf("expected error mentioning 'missing_screen', got: %s", errs[0])
-	}
-}
-
-func TestValidateMissingAnimDef(t *testing.T) {
-	p := New("val_test", "Validation Pack")
-	p.AddAnimationDef("animations/fade.anim.json")
-	p.AddTransition(ScreenTransition{From: "menu", To: "game", AnimationID: "animations/missing.anim.json"})
-	p.AddTransition(ScreenTransition{From: "game", To: "menu", AnimationID: "animations/fade.anim.json"})
-
-	_ = p.AddScreenDef(&ScreenDef{ID: "menu", Namespace: "val_test", Control: &schema.Control{ID: "menu", Type: "screen"}})
-	_ = p.AddScreenDef(&ScreenDef{ID: "game", Namespace: "val_test", Control: &schema.Control{ID: "game", Type: "screen"}})
-
-	errs := p.Validate()
-	if len(errs) != 1 {
-		t.Fatalf("expected 1 error, got %d: %v", len(errs), errs)
-	}
-	if !strings.Contains(errs[0], "missing.anim.json") {
-		t.Errorf("expected error mentioning 'missing.anim.json', got: %s", errs[0])
-	}
-}
-
-func TestValidateAllGood(t *testing.T) {
-	p := New("val_test", "Validation Pack")
-	p.AddAnimationDef("animations/fade.anim.json")
-	p.AddTransition(ScreenTransition{From: "menu", To: "game", AnimationID: "animations/fade.anim.json"})
-
-	_ = p.AddScreenDef(&ScreenDef{ID: "menu", Namespace: "val_test", Control: &schema.Control{ID: "menu", Type: "screen"}})
-	_ = p.AddScreenDef(&ScreenDef{ID: "game", Namespace: "val_test", Control: &schema.Control{ID: "game", Type: "screen"}})
-
-	errs := p.Validate()
-	if len(errs) != 0 {
-		t.Errorf("expected no errors, got: %v", errs)
+	if headerUUID == moduleUUID {
+		t.Error("header and module UUIDs must be distinct")
 	}
 }

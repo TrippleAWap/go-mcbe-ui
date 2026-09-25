@@ -248,8 +248,8 @@ func TestValidateMissingBindingTargetPropertyName(t *testing.T) {
 	c := controls.NewPanel().
 		ID("bind_target").
 		Bindings(schema.Bind{
-			BindingType:      schema.BindingTypeView,
-			BindingName:      "test_bind",
+			BindingType:        schema.BindingTypeView,
+			BindingName:        "test_bind",
 			SourcePropertyName: "source_prop",
 			// TargetPropertyName missing
 		}).

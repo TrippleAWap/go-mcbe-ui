@@ -165,9 +165,9 @@ func FillY() Relative {
 type BindingType string
 
 const (
-	BindingTypeView      BindingType = "view_binding"
+	BindingTypeView       BindingType = "view_binding"
 	BindingTypeCollection BindingType = "collection_binding"
-	BindingTypeVariable  BindingType = "variable_binding"
+	BindingTypeVariable   BindingType = "variable_binding"
 )
 
 // BindingCondition represents the condition under which a binding is active.
@@ -182,20 +182,20 @@ const (
 type Anchor string
 
 const (
-	TopLeft       Anchor = "top_left"
-	TopCenter     Anchor = "top_center"
-	TopRight      Anchor = "top_right"
-	TopMiddle     Anchor = "top_middle"
-	CenterLeft    Anchor = "center_left"
-	Center        Anchor = "center"
-	CenterRight   Anchor = "center_right"
-	BottomLeft    Anchor = "bottom_left"
-	BottomCenter  Anchor = "bottom_center"
-	BottomRight   Anchor = "bottom_right"
-	BottomMiddle  Anchor = "bottom_middle"
-	MiddleLeft    Anchor = "middle_left"
-	MiddleCenter  Anchor = "middle_center"
-	MiddleRight   Anchor = "middle_right"
+	TopLeft      Anchor = "top_left"
+	TopCenter    Anchor = "top_center"
+	TopRight     Anchor = "top_right"
+	TopMiddle    Anchor = "top_middle"
+	CenterLeft   Anchor = "center_left"
+	Center       Anchor = "center"
+	CenterRight  Anchor = "center_right"
+	BottomLeft   Anchor = "bottom_left"
+	BottomCenter Anchor = "bottom_center"
+	BottomRight  Anchor = "bottom_right"
+	BottomMiddle Anchor = "bottom_middle"
+	MiddleLeft   Anchor = "middle_left"
+	MiddleCenter Anchor = "middle_center"
+	MiddleRight  Anchor = "middle_right"
 )
 
 // IsValid returns true if the anchor is a recognized value.
@@ -223,10 +223,10 @@ type Vector3 struct {
 type FontSize string
 
 const (
-	FontSizeTiny   FontSize = "tiny"
-	FontSizeSmall  FontSize = "small"
-	FontSizeNormal FontSize = "normal"
-	FontSizeLarge  FontSize = "large"
+	FontSizeTiny       FontSize = "tiny"
+	FontSizeSmall      FontSize = "small"
+	FontSizeNormal     FontSize = "normal"
+	FontSizeLarge      FontSize = "large"
 	FontSizeExtraLarge FontSize = "extra_large"
 )
 
@@ -259,7 +259,7 @@ const (
 type ClipDirection string
 
 const (
-	ClipDirectionNone     ClipDirection = "none"
+	ClipDirectionNone       ClipDirection = "none"
 	ClipDirectionHorizontal ClipDirection = "horizontal"
 	ClipDirectionVertical   ClipDirection = "vertical"
 	ClipDirectionBoth       ClipDirection = "both"
@@ -269,7 +269,7 @@ const (
 type GridFillDirection string
 
 const (
-	GridFillDown GridFillDirection = "down"
+	GridFillDown  GridFillDirection = "down"
 	GridFillRight GridFillDirection = "right"
 )
 
@@ -277,7 +277,7 @@ const (
 type GridRescalingType string
 
 const (
-	GridRescalingNone     GridRescalingType = "none"
+	GridRescalingNone           GridRescalingType = "none"
 	GridRescalingMaintainAspect GridRescalingType = "maintain_aspect"
 )
 
@@ -291,12 +291,12 @@ type AnchorTo Anchor
 type AnimType string
 
 const (
-	AnimTypeAlpha AnimType = "alpha"
-	AnimTypeSize AnimType = "size"
-	AnimTypeOffset AnimType = "offset"
-	AnimTypeColor AnimType = "color"
-	AnimTypeUV AnimType = "uv"
-	AnimTypeRotation AnimType = "rotation"
+	AnimTypeAlpha     AnimType = "alpha"
+	AnimTypeSize      AnimType = "size"
+	AnimTypeOffset    AnimType = "offset"
+	AnimTypeColor     AnimType = "color"
+	AnimTypeUV        AnimType = "uv"
+	AnimTypeRotation  AnimType = "rotation"
 	AnimTypeAnimation AnimType = "animation"
 )
 
@@ -304,37 +304,37 @@ const (
 type Easing string
 
 const (
-	EasingLinear   Easing = "linear"
-	EasingInQuad   Easing = "in_quad"
-	EasingOutQuad  Easing = "out_quad"
-	EasingInOutQuad Easing = "in_out_quad"
-	EasingInCubic  Easing = "in_cubic"
-	EasingOutCubic Easing = "out_cubic"
-	EasingInOutCubic Easing = "in_out_cubic"
-	EasingInQuart  Easing = "in_quart"
-	EasingOutQuart Easing = "out_quart"
-	EasingInOutQuart Easing = "in_out_quart"
-	EasingInQuint  Easing = "in_quint"
-	EasingOutQuint Easing = "out_quint"
-	EasingInOutQuint Easing = "in_out_quint"
-	EasingInSine   Easing = "in_sine"
-	EasingOutSine  Easing = "out_sine"
-	EasingInOutSine Easing = "in_out_sine"
-	EasingInExpo   Easing = "in_expo"
-	EasingOutExpo  Easing = "out_expo"
-	EasingInOutExpo Easing = "in_out_expo"
-	EasingInCirc   Easing = "in_circ"
-	EasingOutCirc  Easing = "out_circ"
-	EasingInOutCirc Easing = "in_out_circ"
-	EasingInBack   Easing = "in_back"
-	EasingOutBack  Easing = "out_back"
-	EasingInOutBack Easing = "in_out_back"
-	EasingInElastic Easing = "in_elastic"
-	EasingOutElastic Easing = "out_elastic"
+	EasingLinear       Easing = "linear"
+	EasingInQuad       Easing = "in_quad"
+	EasingOutQuad      Easing = "out_quad"
+	EasingInOutQuad    Easing = "in_out_quad"
+	EasingInCubic      Easing = "in_cubic"
+	EasingOutCubic     Easing = "out_cubic"
+	EasingInOutCubic   Easing = "in_out_cubic"
+	EasingInQuart      Easing = "in_quart"
+	EasingOutQuart     Easing = "out_quart"
+	EasingInOutQuart   Easing = "in_out_quart"
+	EasingInQuint      Easing = "in_quint"
+	EasingOutQuint     Easing = "out_quint"
+	EasingInOutQuint   Easing = "in_out_quint"
+	EasingInSine       Easing = "in_sine"
+	EasingOutSine      Easing = "out_sine"
+	EasingInOutSine    Easing = "in_out_sine"
+	EasingInExpo       Easing = "in_expo"
+	EasingOutExpo      Easing = "out_expo"
+	EasingInOutExpo    Easing = "in_out_expo"
+	EasingInCirc       Easing = "in_circ"
+	EasingOutCirc      Easing = "out_circ"
+	EasingInOutCirc    Easing = "in_out_circ"
+	EasingInBack       Easing = "in_back"
+	EasingOutBack      Easing = "out_back"
+	EasingInOutBack    Easing = "in_out_back"
+	EasingInElastic    Easing = "in_elastic"
+	EasingOutElastic   Easing = "out_elastic"
 	EasingInOutElastic Easing = "in_out_elastic"
-	EasingInBounce Easing = "in_bounce"
-	EasingOutBounce Easing = "out_bounce"
-	EasingInOutBounce Easing = "in_out_bounce"
+	EasingInBounce     Easing = "in_bounce"
+	EasingOutBounce    Easing = "out_bounce"
+	EasingInOutBounce  Easing = "in_out_bounce"
 )
 
 // Bind represents a single data binding entry.
@@ -376,10 +376,10 @@ type Control struct {
 	Type string `json:"type,omitempty"`
 
 	// --- Core ---
-	Controls    []string        `json:"controls,omitempty"`
-	Variables   []Variable      `json:"variables,omitempty"`
+	Controls      []string       `json:"controls,omitempty"`
+	Variables     []Variable     `json:"variables,omitempty"`
 	Modifications []Modification `json:"modifications,omitempty"`
-	Ignored     bool            `json:"ignored,omitempty"`
+	Ignored       bool           `json:"ignored,omitempty"`
 
 	// --- Control ---
 	Visible              bool            `json:"visible,omitempty"`
@@ -414,11 +414,11 @@ type Control struct {
 	UseAnchoredOffset       bool      `json:"use_anchored_offset,omitempty"`
 
 	// --- Data Binding ---
-	Bindings              []Bind            `json:"bindings,omitempty"`
-	BindingType           BindingType       `json:"binding_type,omitempty"`
-	BindingName           string            `json:"binding_name,omitempty"`
-	BindingCollectionName string            `json:"binding_collection_name,omitempty"`
-	BindingCondition      BindingCondition  `json:"binding_condition,omitempty"`
+	Bindings              []Bind           `json:"bindings,omitempty"`
+	BindingType           BindingType      `json:"binding_type,omitempty"`
+	BindingName           string           `json:"binding_name,omitempty"`
+	BindingCollectionName string           `json:"binding_collection_name,omitempty"`
+	BindingCondition      BindingCondition `json:"binding_condition,omitempty"`
 
 	// --- Sprite / Image ---
 	Texture                  string          `json:"texture,omitempty"`
@@ -444,25 +444,25 @@ type Control struct {
 	FitToWidth               bool            `json:"$fit_to_width,omitempty"`
 
 	// --- Text / Label ---
-	Text                 string          `json:"text,omitempty"`
-	LockedColor          json.RawMessage `json:"locked_color,omitempty"`
-	FontSize             FontSize        `json:"font_size,omitempty"`
-	FontScaleFactor      float64         `json:"font_scale_factor,omitempty"`
-	FontType             FontType        `json:"font_type,omitempty"`
-	BackupFontType       string          `json:"backup_font_type,omitempty"`
-	TextAlignment        TextAlignment   `json:"text_alignment,omitempty"`
-	Alignment            string          `json:"alignment,omitempty"`
-	Localize             bool            `json:"localize,omitempty"`
-	LinePadding          float64         `json:"line_padding,omitempty"`
-	Shadow               bool            `json:"shadow,omitempty"`
-	HideHyphen           bool            `json:"hide_hyphen,omitempty"`
-	LockedAlpha          float64         `json:"locked_alpha,omitempty"`
-	EnableProfanityFilter bool           `json:"enable_profanity_filter,omitempty"`
-	NotifyOnEllipses     []string        `json:"notify_on_ellipses,omitempty"`
-	NotifyEllipsesSibling string        `json:"notify_ellipses_sibling,omitempty"`
-	UsePlaceHolder       bool            `json:"use_place_holder,omitempty"`
-	PlaceHolderText      string          `json:"place_holder_text,omitempty"`
-	PlaceHolderTextColor json.RawMessage `json:"place_holder_text_color,omitempty"`
+	Text                  string          `json:"text,omitempty"`
+	LockedColor           json.RawMessage `json:"locked_color,omitempty"`
+	FontSize              FontSize        `json:"font_size,omitempty"`
+	FontScaleFactor       float64         `json:"font_scale_factor,omitempty"`
+	FontType              FontType        `json:"font_type,omitempty"`
+	BackupFontType        string          `json:"backup_font_type,omitempty"`
+	TextAlignment         TextAlignment   `json:"text_alignment,omitempty"`
+	Alignment             string          `json:"alignment,omitempty"`
+	Localize              bool            `json:"localize,omitempty"`
+	LinePadding           float64         `json:"line_padding,omitempty"`
+	Shadow                bool            `json:"shadow,omitempty"`
+	HideHyphen            bool            `json:"hide_hyphen,omitempty"`
+	LockedAlpha           float64         `json:"locked_alpha,omitempty"`
+	EnableProfanityFilter bool            `json:"enable_profanity_filter,omitempty"`
+	NotifyOnEllipses      []string        `json:"notify_on_ellipses,omitempty"`
+	NotifyEllipsesSibling string          `json:"notify_ellipses_sibling,omitempty"`
+	UsePlaceHolder        bool            `json:"use_place_holder,omitempty"`
+	PlaceHolderText       string          `json:"place_holder_text,omitempty"`
+	PlaceHolderTextColor  json.RawMessage `json:"place_holder_text_color,omitempty"`
 
 	// --- Stack Panel ---
 	Orientation Orientation `json:"orientation,omitempty"`
@@ -484,36 +484,36 @@ type Control struct {
 	LockedControl  string `json:"locked_control,omitempty"`
 
 	// --- Toggle ---
-	ToggleName              string `json:"toggle_name,omitempty"`
-	RadioToggleGroup        string `json:"radio_toggle_group,omitempty"`
-	ToggleDefaultState      bool   `json:"toggle_default_state,omitempty"`
-	ToggleOnButton          string `json:"toggle_on_button,omitempty"`
-	ToggleOffButton         string `json:"toggle_off_button,omitempty"`
-	CheckedControl          string `json:"checked_control,omitempty"`
-	UncheckedControl        string `json:"unchecked_control,omitempty"`
-	CheckedHoverControl     string `json:"checked_hover_control,omitempty"`
-	UncheckedHoverControl   string `json:"unchecked_hover_control,omitempty"`
-	CheckedLockedControl    string `json:"checked_locked_control,omitempty"`
-	UncheckedLockedControl  string `json:"unchecked_locked_control,omitempty"`
-	ResetOnFocusLost        bool   `json:"reset_on_focus_lost,omitempty"`
+	ToggleName             string `json:"toggle_name,omitempty"`
+	RadioToggleGroup       string `json:"radio_toggle_group,omitempty"`
+	ToggleDefaultState     bool   `json:"toggle_default_state,omitempty"`
+	ToggleOnButton         string `json:"toggle_on_button,omitempty"`
+	ToggleOffButton        string `json:"toggle_off_button,omitempty"`
+	CheckedControl         string `json:"checked_control,omitempty"`
+	UncheckedControl       string `json:"unchecked_control,omitempty"`
+	CheckedHoverControl    string `json:"checked_hover_control,omitempty"`
+	UncheckedHoverControl  string `json:"unchecked_hover_control,omitempty"`
+	CheckedLockedControl   string `json:"checked_locked_control,omitempty"`
+	UncheckedLockedControl string `json:"unchecked_locked_control,omitempty"`
+	ResetOnFocusLost       bool   `json:"reset_on_focus_lost,omitempty"`
 
 	// --- Slider ---
-	SliderTrackButton          string  `json:"slider_track_button,omitempty"`
-	SliderSmallDecreaseButton  string  `json:"slider_small_decrease_button,omitempty"`
-	SliderSmallIncreaseButton  string  `json:"slider_small_increase_button,omitempty"`
-	SliderSteps                int     `json:"slider_steps,omitempty"`
-	SliderDirection            string  `json:"slider_direction,omitempty"`
-	SliderTimeout              float64 `json:"slider_timeout,omitempty"`
-	SliderCollectionName       string  `json:"slider_collection_name,omitempty"`
-	SliderName                 string  `json:"slider_name,omitempty"`
-	SliderSelectOnHover        bool    `json:"slider_select_on_hover,omitempty"`
-	SliderSelectedButton       string  `json:"slider_selected_button,omitempty"`
-	SliderDeselectedButton     string  `json:"slider_deselected_button,omitempty"`
-	SliderBoxControl           string  `json:"slider_box_control,omitempty"`
-	BackgroundControl          string  `json:"background_control,omitempty"`
-	BackgroundHoverControl     string  `json:"background_hover_control,omitempty"`
-	ProgressControl            string  `json:"progress_control,omitempty"`
-	ProgressHoverControl       string  `json:"progress_hover_control,omitempty"`
+	SliderTrackButton         string  `json:"slider_track_button,omitempty"`
+	SliderSmallDecreaseButton string  `json:"slider_small_decrease_button,omitempty"`
+	SliderSmallIncreaseButton string  `json:"slider_small_increase_button,omitempty"`
+	SliderSteps               int     `json:"slider_steps,omitempty"`
+	SliderDirection           string  `json:"slider_direction,omitempty"`
+	SliderTimeout             float64 `json:"slider_timeout,omitempty"`
+	SliderCollectionName      string  `json:"slider_collection_name,omitempty"`
+	SliderName                string  `json:"slider_name,omitempty"`
+	SliderSelectOnHover       bool    `json:"slider_select_on_hover,omitempty"`
+	SliderSelectedButton      string  `json:"slider_selected_button,omitempty"`
+	SliderDeselectedButton    string  `json:"slider_deselected_button,omitempty"`
+	SliderBoxControl          string  `json:"slider_box_control,omitempty"`
+	BackgroundControl         string  `json:"background_control,omitempty"`
+	BackgroundHoverControl    string  `json:"background_hover_control,omitempty"`
+	ProgressControl           string  `json:"progress_control,omitempty"`
+	ProgressHoverControl      string  `json:"progress_hover_control,omitempty"`
 
 	// --- Edit Box ---
 	TextBoxName                   string `json:"text_box_name,omitempty"`
@@ -529,10 +529,10 @@ type Control struct {
 	VirtualKeyboardBufferControl  string `json:"virtual_keyboard_buffer_control,omitempty"`
 
 	// --- Scroll View ---
-	ScrollViewPort                 string `json:"scroll_view_port,omitempty"`
-	ScrollContent                  string `json:"scroll_content,omitempty"`
-	ScrollbarBox                   string `json:"scrollbar_box,omitempty"`
-	ScrollbarTrack                 string `json:"scrollbar_track,omitempty"`
+	ScrollViewPort                 string  `json:"scroll_view_port,omitempty"`
+	ScrollContent                  string  `json:"scroll_content,omitempty"`
+	ScrollbarBox                   string  `json:"scrollbar_box,omitempty"`
+	ScrollbarTrack                 string  `json:"scrollbar_track,omitempty"`
 	ScrollSpeed                    float64 `json:"scroll_speed,omitempty"`
 	JumpToBottomOnUpdate           bool    `json:"jump_to_bottom_on_update,omitempty"`
 	AllowScrollEvenWhenContentFits bool    `json:"allow_scroll_even_when_content_fits,omitempty"`
@@ -545,41 +545,41 @@ type Control struct {
 	ScrollbarAlwaysVisible         bool    `json:"scrollbar_always_visible,omitempty"`
 
 	// --- Custom Renderer ---
-	Renderer             string  `json:"renderer,omitempty"`
-	CameraTiltDegrees    float64 `json:"camera_tilt_degrees,omitempty"`
-	StartingRotation     float64 `json:"starting_rotation,omitempty"`
-	UseSelectedSkin      bool    `json:"use_selected_skin,omitempty"`
-	UseUUID              bool    `json:"use_uuid,omitempty"`
-	UseSkinGUIScale      bool    `json:"use_skin_gui_scale,omitempty"`
-	UsePlayerPaperdoll   bool    `json:"use_player_paperdoll,omitempty"`
-	Rotation             float64 `json:"rotation,omitempty"`
-	AnimationLooped      bool    `json:"animation_looped,omitempty"`
+	Renderer           string  `json:"renderer,omitempty"`
+	CameraTiltDegrees  float64 `json:"camera_tilt_degrees,omitempty"`
+	StartingRotation   float64 `json:"starting_rotation,omitempty"`
+	UseSelectedSkin    bool    `json:"use_selected_skin,omitempty"`
+	UseUUID            bool    `json:"use_uuid,omitempty"`
+	UseSkinGUIScale    bool    `json:"use_skin_gui_scale,omitempty"`
+	UsePlayerPaperdoll bool    `json:"use_player_paperdoll,omitempty"`
+	Rotation           float64 `json:"rotation,omitempty"`
+	AnimationLooped    bool    `json:"animation_looped,omitempty"`
 
 	// --- Screen ---
-	IsModal                        bool   `json:"is_modal,omitempty"`
-	AbsorbsInput                   bool   `json:"absorbs_input,omitempty"`
-	RenderGameBehind               bool   `json:"render_game_behind,omitempty"`
-	CloseOnPlayerHurt              bool   `json:"close_on_player_hurt,omitempty"`
-	GamepadCursor                  bool   `json:"gamepad_cursor,omitempty"`
-	RenderOnlyWhenTopmost          bool   `json:"render_only_when_topmost,omitempty"`
-	ScreenNotFlushable             bool   `json:"screen_not_flushable,omitempty"`
-	AlwaysAcceptsInput             bool   `json:"always_accepts_input,omitempty"`
-	IsShowingMenu                  bool   `json:"is_showing_menu,omitempty"`
-	ShouldStealMouse               bool   `json:"should_steal_mouse,omitempty"`
-	LowFrequencyRendering          bool   `json:"low_frequency_rendering,omitempty"`
-	ScreenDrawsLast                bool   `json:"screen_draws_last,omitempty"`
-	ForceRenderBelow               bool   `json:"force_render_below,omitempty"`
-	SendTelemetry                  bool   `json:"send_telemetry,omitempty"`
-	CacheScreen                    bool   `json:"cache_screen,omitempty"`
-	LoadScreenImmediately          bool   `json:"load_screen_immediately,omitempty"`
-	GamepadCursorDeflectionMode    string `json:"gamepad_cursor_deflection_mode,omitempty"`
-	ShouldBeSkippedDuringAutomation bool  `json:"should_be_skipped_during_automation,omitempty"`
-	VRMode                         bool   `json:"vr_mode,omitempty"`
+	IsModal                         bool   `json:"is_modal,omitempty"`
+	AbsorbsInput                    bool   `json:"absorbs_input,omitempty"`
+	RenderGameBehind                bool   `json:"render_game_behind,omitempty"`
+	CloseOnPlayerHurt               bool   `json:"close_on_player_hurt,omitempty"`
+	GamepadCursor                   bool   `json:"gamepad_cursor,omitempty"`
+	RenderOnlyWhenTopmost           bool   `json:"render_only_when_topmost,omitempty"`
+	ScreenNotFlushable              bool   `json:"screen_not_flushable,omitempty"`
+	AlwaysAcceptsInput              bool   `json:"always_accepts_input,omitempty"`
+	IsShowingMenu                   bool   `json:"is_showing_menu,omitempty"`
+	ShouldStealMouse                bool   `json:"should_steal_mouse,omitempty"`
+	LowFrequencyRendering           bool   `json:"low_frequency_rendering,omitempty"`
+	ScreenDrawsLast                 bool   `json:"screen_draws_last,omitempty"`
+	ForceRenderBelow                bool   `json:"force_render_below,omitempty"`
+	SendTelemetry                   bool   `json:"send_telemetry,omitempty"`
+	CacheScreen                     bool   `json:"cache_screen,omitempty"`
+	LoadScreenImmediately           bool   `json:"load_screen_immediately,omitempty"`
+	GamepadCursorDeflectionMode     string `json:"gamepad_cursor_deflection_mode,omitempty"`
+	ShouldBeSkippedDuringAutomation bool   `json:"should_be_skipped_during_automation,omitempty"`
+	VRMode                          bool   `json:"vr_mode,omitempty"`
 
 	// --- Animations ---
-	Anims                  []Anim   `json:"anims,omitempty"`
-	DisableAnimFastForward bool     `json:"disable_anim_fast_forward,omitempty"`
-	AnimationResetName     string   `json:"animation_reset_name,omitempty"`
+	Anims                  []Anim `json:"anims,omitempty"`
+	DisableAnimFastForward bool   `json:"disable_anim_fast_forward,omitempty"`
+	AnimationResetName     string `json:"animation_reset_name,omitempty"`
 
 	// --- Collection ---
 	CollectionName string `json:"collection_name,omitempty"`

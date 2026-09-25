@@ -58,102 +58,15 @@ func TestAddNilScreen(t *testing.T) {
 	}
 }
 
-func TestAddLink(t *testing.T) {
+func TestValidateAllGood(t *testing.T) {
 	r := registry.New()
 	r.AddScreen("menu", controls.NewScreen().ID("menu").Control()).
 		AddScreen("game", controls.NewScreen().ID("game").Control()).
-		AddLink("play_btn", "game", "fade", 0.5)
-
-	links := r.Links()
-	if len(links) != 1 {
-		t.Fatalf("expected 1 link, got %d", len(links))
-	}
-	if links[0].FromID != "play_btn" {
-		t.Errorf("FromID = %q, want play_btn", links[0].FromID)
-	}
-	if links[0].ToScreen != "game" {
-		t.Errorf("ToScreen = %q, want game", links[0].ToScreen)
-	}
-}
-
-func TestValidateMissingTarget(t *testing.T) {
-	r := registry.New()
-	r.AddScreen("menu", controls.NewScreen().ID("menu").Control())
-	r.AddLink("btn", "missing_screen", "", 0)
-
-	errs := r.Validate()
-	if len(errs) == 0 {
-		t.Error("expected validation error for missing target screen")
-	}
-}
-
-func TestValidateEmptyFromID(t *testing.T) {
-	r := registry.New()
-	r.AddScreen("menu", controls.NewScreen().ID("menu").Control())
-	r.AddScreen("game", controls.NewScreen().ID("game").Control())
-	r.AddLink("", "game", "", 0)
-
-	errs := r.Validate()
-	if len(errs) == 0 {
-		t.Error("expected validation error for empty FromID")
-	}
-}
-
-func TestValidateMissingSourceControl(t *testing.T) {
-	r := registry.New()
-	r.AddScreen("menu", controls.NewScreen().ID("menu").Control())
-	r.AddScreen("game", controls.NewScreen().ID("game").Control())
-	r.AddLink("nonexistent_btn", "game", "fade", 0)
-
-	errs := r.Validate()
-	if len(errs) == 0 {
-		t.Error("expected validation error for missing source control")
-	}
-}
-
-func TestValidateAllGood(t *testing.T) {
-	r := registry.New()
-	r.AddScreen("menu", controls.NewScreen().ID("menu").Control())
-	r.AddScreen("game", controls.NewScreen().ID("game").Control())
-	r.AddScreen("play_btn", controls.NewScreen().ID("play_btn").Control())
-	r.AddLink("play_btn", "game", "fade", 0.5)
+		AddScreen("play_btn", controls.NewScreen().ID("play_btn").Control())
 
 	errs := r.Validate()
 	if len(errs) != 0 {
 		t.Errorf("expected no errors, got: %v", errs)
-	}
-}
-
-func TestInjectAnimations(t *testing.T) {
-	playScreen := controls.NewScreen().ID("play_btn").Control()
-	menuRoot := controls.NewScreen().ID("menu").Control()
-
-	r := registry.New()
-	r.AddScreen("menu", menuRoot).AddScreen("play_btn", playScreen)
-	r.AddLink("play_btn", "game", "fade", 0.5)
-
-	// Validate first (game screen doesn't exist, so Validate fails)
-	// We test injection directly.
-	index := registry.CollectAllControls(r.Screens(), r.Nested())
-	btn, ok := index["play_btn"]
-	if !ok {
-		t.Fatal("play_btn not found in index")
-	}
-	if len(btn.Anims) != 0 {
-		t.Fatalf("expected 0 anims before injection, got %d", len(btn.Anims))
-	}
-
-	r.InjectAnimations()
-
-	btn2, ok := index["play_btn"]
-	if !ok {
-		t.Fatal("play_btn not found after injection")
-	}
-	if len(btn2.Anims) != 1 {
-		t.Fatalf("expected 1 anim after injection, got %d", len(btn2.Anims))
-	}
-	if btn2.Anims[0].AnimType != schema.AnimTypeAlpha {
-		t.Errorf("anim type = %q, want alpha", btn2.Anims[0].AnimType)
 	}
 }
 
@@ -191,17 +104,8 @@ func TestRegisterNested(t *testing.T) {
 func TestToPack(t *testing.T) {
 	r := registry.New()
 	r.AddScreen("menu", controls.NewScreen().ID("menu").Control()).
-		AddScreen("game", controls.NewScreen().ID("game").Control())
-	r.AddLink("play_btn", "game", "fade", 0.5)
-
-	_, err := r.ToPack("my_addon")
-	if err == nil {
-		t.Error("expected error: source control 'play_btn' not in any screen")
-	}
-
-	btnCtrl := controls.NewScreen().ID("play_btn").Control()
-	r.AddScreen("play_btn", btnCtrl)
-	r.AddAnimationDef("fade")
+		AddScreen("game", controls.NewScreen().ID("game").Control()).
+		AddScreen("play_btn", controls.NewScreen().ID("play_btn").Control())
 
 	out, err := r.ToPack("my_addon")
 	if err != nil {
@@ -210,11 +114,18 @@ func TestToPack(t *testing.T) {
 	if len(out.Screens) != 3 {
 		t.Errorf("expected 3 screens, got %d", len(out.Screens))
 	}
-	if len(out.Transitions) != 1 {
-		t.Errorf("expected 1 transition, got %d", len(out.Transitions))
+	if out.Namespace != "my_addon" {
+		t.Errorf("Namespace = %q, want my_addon", out.Namespace)
 	}
-	if out.Transitions[0].From != "play_btn" {
-		t.Errorf("transition from = %q, want play_btn", out.Transitions[0].From)
+}
+
+func TestToPackValidates(t *testing.T) {
+	r := registry.New()
+	r.AddScreen("parent", controls.NewPanel().ID("parent").AddControl("missing").Control())
+
+	_, err := r.ToPack("my_addon")
+	if err == nil {
+		t.Error("expected error for unresolved control reference")
 	}
 }
 
@@ -233,7 +144,7 @@ func TestFromJSON(t *testing.T) {
 }
 
 func TestFromUIDefs(t *testing.T) {
-	data := []byte(`{"format_version":1,"ui":["screen_a.json","screen_b.json"],"script_api_version":1}`)
+	data := []byte(`{"format_version":1,"ui_defs":["screen_a.json","screen_b.json"]}`)
 	files, err := registry.FromUIDefs(data)
 	if err != nil {
 		t.Fatalf("FromUIDefs failed: %v", err)
@@ -272,7 +183,7 @@ func TestLoadFromDir(t *testing.T) {
 	tmpDir := t.TempDir()
 	os.WriteFile(filepath.Join(tmpDir, "screen_a.json"), []byte(`{"id":"a","type":"screen"}`), 0644)
 	os.WriteFile(filepath.Join(tmpDir, "screen_b.json"), []byte(`{"id":"b","type":"screen"}`), 0644)
-	os.WriteFile(filepath.Join(tmpDir, "_ui_defs.json"), []byte(`{"ui":["screen_a.json"]}`), 0644)
+	os.WriteFile(filepath.Join(tmpDir, "_ui_defs.json"), []byte(`{"ui_defs":["screen_a.json"]}`), 0644)
 	os.WriteFile(filepath.Join(tmpDir, "skip.txt"), []byte("not json"), 0644)
 
 	r := registry.New()

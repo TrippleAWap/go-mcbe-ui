@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 
 	"github.com/trippleawap/go-mcbe-ui/mcbeui/controls"
@@ -12,7 +11,6 @@ import (
 	"github.com/trippleawap/go-mcbe-ui/mcbeui/pack"
 	"github.com/trippleawap/go-mcbe-ui/mcbeui/registry"
 	"github.com/trippleawap/go-mcbe-ui/mcbeui/schema"
-	"github.com/trippleawap/go-mcbe-ui/mcbeui/transitions"
 )
 
 // TestIntegrationRoundTrip verifies that a control built with the library can be
@@ -62,7 +60,7 @@ func TestIntegrationRoundTrip(t *testing.T) {
 }
 
 // TestIntegrationPackOutput verifies the full pipeline: build screens, register,
-// validate, inject animations, generate pack, and verify output files.
+// validate, generate a pack to disk, and verify output files.
 func TestIntegrationPackOutput(t *testing.T) {
 	menu := controls.NewScreen().
 		ID("menu").
@@ -85,9 +83,7 @@ func TestIntegrationPackOutput(t *testing.T) {
 	rgstry := registry.New()
 	rgstry.AddScreen("menu", menu.Control()).
 		AddScreen("game", game.Control()).
-		AddScreen("play_btn", playBtn.Control()).
-		AddAnimationDef("fade").
-		AddLink("play_btn", "game", string(transitions.Fade), 0.5)
+		AddScreen("play_btn", playBtn.Control())
 
 	out, err := rgstry.ToPack("test_addon")
 	if err != nil {
@@ -96,27 +92,15 @@ func TestIntegrationPackOutput(t *testing.T) {
 	if len(out.Screens) != 3 {
 		t.Errorf("expected 3 screens, got %d", len(out.Screens))
 	}
-	if len(out.Transitions) != 1 {
-		t.Errorf("expected 1 transition, got %d", len(out.Transitions))
-	}
 
 	// Build the pack to disk and verify files.
 	dir := t.TempDir()
 	p := pack.New("test_addon", "Test Pack")
-	p.AddAnimationDef("animations/fade.anim.json")
 	for _, def := range out.Screens {
 		p.AddScreenDef(&pack.ScreenDef{
 			ID:        def.ID,
 			Namespace: def.Namespace,
 			Control:   def.Control,
-		})
-	}
-	for _, tr := range out.Transitions {
-		p.AddTransition(pack.ScreenTransition{
-			From:        tr.From,
-			To:          tr.To,
-			AnimationID: tr.AnimationID,
-			Duration:    tr.Duration,
 		})
 	}
 
@@ -135,40 +119,31 @@ func TestIntegrationPackOutput(t *testing.T) {
 		t.Fatalf("parse _ui_defs.json: %v", err)
 	}
 
-	uiList, ok := defs["ui"].([]interface{})
+	uiList, ok := defs["ui_defs"].([]interface{})
 	if !ok || len(uiList) != 3 {
-		t.Fatalf("expected 3 UI entries, got %v", defs["ui"])
+		t.Fatalf("expected 3 UI entries, got %v", defs["ui_defs"])
 	}
 
-	transList, ok := defs["transitions"].([]interface{})
-	if !ok || len(transList) != 1 {
-		t.Fatalf("expected 1 transition, got %v", defs["transitions"])
-	}
-	t0 := transList[0].(map[string]interface{})
-	if t0["from"] != "play_btn" || t0["to"] != "game" || t0["animation_id"] != string(transitions.Fade) {
-		t.Errorf("transition mismatch: %v", t0)
+	// Verify each screen file was written and is valid JSON.
+	for id, ctrl := range rgstry.Screens() {
+		path := filepath.Join(dir, "ui", id+".json")
+		data, err := os.ReadFile(path)
+		if err != nil {
+			t.Fatalf("missing screen file %s: %v", id, err)
+		}
+		var obj map[string]interface{}
+		if err := json.Unmarshal(data, &obj); err != nil {
+			t.Fatalf("invalid JSON in %s: %v", id, err)
+		}
+		rootID, _ := obj["id"].(string)
+		if rootID != ctrl.ID {
+			t.Errorf("%s: root ID = %q, want %q", id, rootID, ctrl.ID)
+		}
 	}
 
-	// Verify play_btn screen has animation injected.
-	btnPath := filepath.Join(dir, "ui", "play_btn.json")
-	btnData, err := os.ReadFile(btnPath)
-	if err != nil {
-		t.Fatalf("read play_btn.json: %v", err)
-	}
-	var btnObj map[string]interface{}
-	if err := json.Unmarshal(btnData, &btnObj); err != nil {
-		t.Fatalf("parse play_btn.json: %v", err)
-	}
-	anims, ok := btnObj["anims"].([]interface{})
-	if !ok || len(anims) != 1 {
-		t.Fatalf("expected 1 anim on play_btn, got %v", btnObj["anims"])
-	}
-	anim0 := anims[0].(map[string]interface{})
-	if anim0["anim_type"] != "alpha" {
-		t.Errorf("anim type = %v, want alpha", anim0["anim_type"])
-	}
-	if anim0["duration"] != float64(0.5) {
-		t.Errorf("anim duration = %v, want 0.5", anim0["duration"])
+	// Verify manifest.json exists.
+	if _, err := os.Stat(filepath.Join(dir, "manifest.json")); err != nil {
+		t.Errorf("expected manifest.json in pack output: %v", err)
 	}
 }
 
@@ -281,9 +256,9 @@ func TestIntegrationComponentsPackOutput(t *testing.T) {
 	if err := json.Unmarshal(defsData, &defs); err != nil {
 		t.Fatalf("parse _ui_defs.json: %v", err)
 	}
-	uiList, ok := defs["ui"].([]interface{})
+	uiList, ok := defs["ui_defs"].([]interface{})
 	if !ok || len(uiList) != 4 {
-		t.Fatalf("expected 4 UI entries, got %v", defs["ui"])
+		t.Fatalf("expected 4 UI entries, got %v", defs["ui_defs"])
 	}
 }
 
@@ -304,27 +279,5 @@ func TestIntegrationComponentRoundTrip(t *testing.T) {
 	}
 	if restored.Type != "screen" {
 		t.Errorf("restored Type = %q, want screen", restored.Type)
-	}
-}
-
-// TestIntegrationTransitionValidation verifies that ToPack rejects transitions
-// with unregistered animation definitions.
-func TestIntegrationTransitionValidation(t *testing.T) {
-	menu := controls.NewScreen().ID("menu").Control()
-	game := controls.NewScreen().ID("game").Control()
-	btn := controls.NewScreen().ID("btn").Control()
-
-	rgstry := registry.New()
-	rgstry.AddScreen("menu", menu).
-		AddScreen("game", game).
-		AddScreen("btn", btn).
-		AddLink("btn", "game", "unknown_anim", 0.3)
-
-	_, err := rgstry.ToPack("test_addon")
-	if err == nil {
-		t.Fatal("expected error for unregistered animation def")
-	}
-	if !strings.Contains(err.Error(), "unknown_anim") {
-		t.Errorf("expected error mentioning 'unknown_anim', got: %v", err)
 	}
 }

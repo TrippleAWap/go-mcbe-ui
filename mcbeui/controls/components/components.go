@@ -391,10 +391,10 @@ func CraftingScreen() *controls.Screen {
 
 // InventorySlot represents a single item in an inventory screen.
 type InventorySlot struct {
-	ItemID  string       // e.g. "minecraft:diamond"
-	Count   int          // stack count
-	SlotID  string       // custom control ID; auto-generated if empty
-	Binding schema.Bind  // optional binding to keep count in sync with data
+	ItemID  string      // e.g. "minecraft:diamond"
+	Count   int         // stack count
+	SlotID  string      // custom control ID; auto-generated if empty
+	Binding schema.Bind // optional binding to keep count in sync with data
 }
 
 // InventoryScreenWithData builds an inventory grid populated with actual item data.

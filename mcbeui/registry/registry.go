@@ -1,5 +1,5 @@
 // Package registry provides a screen registry that manages screens, validates
-// navigation links, and wires transition animations into controls.
+// control references, and loads existing JSON UI files.
 package registry
 
 import (
@@ -8,35 +8,21 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/trippleawap/go-mcbe-ui/mcbeui/pack"
 	"github.com/trippleawap/go-mcbe-ui/mcbeui/schema"
 )
 
-// Link describes a navigation transition from one control to another screen.
-type Link struct {
-	FromID   string
-	ToScreen string
-	AnimID   string
-	Duration float64
-	Easing   schema.Easing
-}
-
-// Registry manages a collection of screens and their navigation links.
+// Registry manages a collection of screens and their nested controls.
 type Registry struct {
-	screens        map[string]*schema.Control
-	nested         map[string]*schema.Control // manually-registered nested controls
-	links          []Link
-	animationDefs  []string
-	errs           []string
+	screens map[string]*schema.Control
+	nested  map[string]*schema.Control // manually-registered nested controls
+	errs    []string
 }
 
 // New creates an empty registry.
 func New() *Registry {
 	return &Registry{
-		screens:       make(map[string]*schema.Control),
-		nested:        make(map[string]*schema.Control),
-		links:         make([]Link, 0),
-		animationDefs: make([]string, 0),
+		screens: make(map[string]*schema.Control),
+		nested:  make(map[string]*schema.Control),
 	}
 }
 
@@ -54,28 +40,6 @@ func (r *Registry) AddScreen(id string, ctrl *schema.Control) *Registry {
 	r.screens[id] = ctrl
 	return r
 }
-
-// AddAnimationDef registers an animation definition file for transition validation.
-// This is checked by ToPack() to ensure every transition references a known anim def.
-func (r *Registry) AddAnimationDef(filename string) *Registry {
-	r.animationDefs = append(r.animationDefs, filename)
-	return r
-}
-
-// AnimationDefs returns all registered animation definition filenames.
-func (r *Registry) AnimationDefs() []string { return r.animationDefs }
-func (r *Registry) AddLink(fromID, toScreen, animID string, duration float64) *Registry {
-	r.links = append(r.links, Link{
-		FromID:   fromID,
-		ToScreen: toScreen,
-		AnimID:   animID,
-		Duration: duration,
-	})
-	return r
-}
-
-// Links returns all registered navigation links.
-func (r *Registry) Links() []Link { return r.links }
 
 // Screens returns a copy of the registered screens.
 func (r *Registry) Screens() map[string]*schema.Control {
@@ -95,8 +59,8 @@ func (r *Registry) Nested() map[string]*schema.Control {
 	return out
 }
 
-// Validate checks that all links reference valid screens and controls that
-// exist within those screens. Returns human-readable error strings.
+// Validate checks that all Controls[] references resolve to a registered
+// screen or nested control. Returns human-readable error strings.
 func (r *Registry) Validate() []string {
 	r.errs = nil
 
@@ -113,33 +77,7 @@ func (r *Registry) Validate() []string {
 		}
 	}
 
-	for _, link := range r.links {
-		// Check target screen exists.
-		if _, ok := r.screens[link.ToScreen]; !ok {
-			r.errs = append(r.errs, fmt.Sprintf("link %q -> %q: target screen not found", link.FromID, link.ToScreen))
-			continue
-		}
-		// Check source control exists.
-		if link.FromID == "" {
-			r.errs = append(r.errs, fmt.Sprintf("link to %q: empty source control ID", link.ToScreen))
-			continue
-		}
-		if _, ok := idx[link.FromID]; !ok {
-			r.errs = append(r.errs, fmt.Sprintf("link %q -> %q: source control %q not found", link.FromID, link.ToScreen, link.FromID))
-		}
-	}
 	return r.errs
-}
-
-// InjectAnimations attaches transition animations to the controls that trigger them.
-// This modifies the control pointers in-place. Call Validate() first.
-func (r *Registry) InjectAnimations() {
-	index := CollectAllControls(r.screens, r.nested)
-	for _, link := range r.links {
-		if ctrl, ok := index[link.FromID]; ok {
-			ctrl.Anims = append(ctrl.Anims, buildTransitionAnim(link))
-		}
-	}
 }
 
 // Errors returns any validation errors from the last Validate() call.
@@ -275,46 +213,18 @@ func CollectAllControls(screens, nested map[string]*schema.Control) map[string]*
 	return idx
 }
 
-// buildTransitionAnim creates a schema.Anim from a Link's transition params.
-func buildTransitionAnim(l Link) schema.Anim {
-	if l.Duration <= 0 {
-		l.Duration = 0.3
-	}
-	switch l.AnimID {
-	case "fade", "":
-		return schema.AnimAlpha(l.Duration, 0, 1)
-	case "slide-left":
-		return schema.AnimOffset(l.Duration,
-			schema.Vector2{X: -200, Y: 0},
-			schema.Vector2{X: 0, Y: 0})
-	case "slide-right":
-		return schema.AnimOffset(l.Duration,
-			schema.Vector2{X: 200, Y: 0},
-			schema.Vector2{X: 0, Y: 0})
-	case "scale":
-		return schema.AnimSize(l.Duration,
-			schema.Vector2{X: 0, Y: 0},
-			schema.Vector2{X: 1, Y: 1})
-	default:
-		return schema.AnimAlpha(l.Duration, 0, 1)
-	}
-}
-
-// ToPack converts the registry into a pack output structure ready for
-// serialization. It validates the registry (screens, controls, links), then
-// validates transitions against registered animation definitions, and injects
-// animations into triggering controls. Returns an error if any validation fails.
+// ToPack converts the registry into a pack output structure ready for pack
+// generation. It validates the registry (screens and control references) and
+// returns an error if any validation fails.
 func (r *Registry) ToPack(namespace string) (*PackOutput, error) {
 	errs := r.Validate()
 	if len(errs) > 0 {
 		return nil, fmt.Errorf("registry validation failed: %v", errs)
 	}
-	r.InjectAnimations()
 
 	out := &PackOutput{
-		Namespace:   namespace,
-		Screens:     make([]ScreenDef, 0, len(r.screens)),
-		Transitions: make([]TransDef, 0, len(r.links)),
+		Namespace: namespace,
+		Screens:   make([]ScreenDef, 0, len(r.screens)),
 	}
 
 	for id, ctrl := range r.screens {
@@ -323,30 +233,6 @@ func (r *Registry) ToPack(namespace string) (*PackOutput, error) {
 			Namespace: namespace,
 			Control:   ctrl,
 		})
-	}
-
-	for _, link := range r.links {
-		out.Transitions = append(out.Transitions, TransDef{
-			From:        link.FromID,
-			To:          link.ToScreen,
-			AnimationID: link.AnimID,
-			Duration:    link.Duration,
-		})
-	}
-
-	// Validate transitions against registered animation defs.
-	p := pack.New(namespace, namespace)
-	for _, def := range out.Screens {
-		p.AddScreenDef(&pack.ScreenDef{ID: def.ID, Namespace: def.Namespace, Control: def.Control})
-	}
-	for _, tr := range out.Transitions {
-		p.AddTransition(pack.ScreenTransition{From: tr.From, To: tr.To, AnimationID: tr.AnimationID, Duration: tr.Duration})
-	}
-	for _, def := range r.animationDefs {
-		p.AddAnimationDef(def)
-	}
-	if transErrs := p.Validate(); len(transErrs) > 0 {
-		return nil, fmt.Errorf("transition validation failed: %v", transErrs)
 	}
 
 	return out, nil
@@ -359,19 +245,10 @@ type ScreenDef struct {
 	Control   *schema.Control
 }
 
-// TransDef is a screen-to-screen transition ready for _ui_defs.json.
-type TransDef struct {
-	From        string
-	To          string
-	AnimationID string
-	Duration    float64
-}
-
 // PackOutput is the complete output of a registry build.
 type PackOutput struct {
-	Namespace   string
-	Screens     []ScreenDef
-	Transitions []TransDef
+	Namespace string
+	Screens   []ScreenDef
 }
 
 // FromJSON loads a control from raw JSON bytes. The JSON should contain a single
@@ -388,10 +265,10 @@ func FromJSON(data []byte) (*schema.Control, error) {
 // references. Use LoadScreen to load each individual screen.
 func FromUIDefs(data []byte) ([]string, error) {
 	var defs struct {
-		UI []string `json:"ui"`
+		UIDefs []string `json:"ui_defs"`
 	}
 	if err := json.Unmarshal(data, &defs); err != nil {
 		return nil, fmt.Errorf("unmarshal _ui_defs.json: %w", err)
 	}
-	return defs.UI, nil
+	return defs.UIDefs, nil
 }
