@@ -1,3 +1,9 @@
-# Generated output from go generate examples
-generate/generated/
-my_pack_output/
+*
+
+!*/
+
+!*.go
+!go.*
+
+!*.md
+!.git*
